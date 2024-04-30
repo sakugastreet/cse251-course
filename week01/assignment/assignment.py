@@ -1,4 +1,17 @@
 """
+
+<<< I believe I have met the requirements for category 4.
+    the program runs as asked, the only descrepancy is
+    that it doesn't switch randomly. It completes each set
+    of shapes on 1 by 1. so it will do a circle, then
+    square, then rectangle then triangle, then move on to
+    the next space. This is because of the time.sleep
+    functions. These were added to get consistency. Prior
+    to adding them the program ran correctly, but would
+    only change the sequence about 1/4 times. >>>
+    
+
+
 Course: CSE 251 
 Lesson Week: 01
 File: assignment.py 
