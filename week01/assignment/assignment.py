@@ -94,32 +94,46 @@ def draw_coord_system(tur, x, y, size=300, color='black'):
         tur.backward(size)
         tur.left(90)
 
-def draw_squares(tur):
+def draw_squares(tur, lock=threading.Lock):
     """Draw a group of squares"""
     for x in range(-300, 350, 200):
         for y in range(-300, 350, 200):
+            lock.acquire()
             draw_square(tur, x - 50, y + 50, 100)
+            lock.release()
+            time.sleep(.000001)
 
 
-def draw_circles(tur):
+def draw_circles(tur, lock=threading.Lock):
     """Draw a group of circles"""
     for x in range(-300, 350, 200):
         for y in range(-300, 350, 200):
+            lock.acquire()
             draw_circle(tur, x, y-2, 50)
+            lock.release()
+            time.sleep(.000001)
 
-
-def draw_triangles(tur):
+def draw_triangles(tur, lock=threading.Lock):
     """Draw a group of triangles"""
     for x in range(-300, 350, 200):
         for y in range(-300, 350, 200):
+            lock.acquire()
             draw_triangle(tur, x-30, y-30+10, 60)
+            lock.release()
+            time.sleep(.0000001)
 
 
-def draw_rectangles(tur):
+
+def draw_rectangles(tur, lock=threading.Lock):
     """Draw a group of Rectangles"""
     for x in range(-300, 350, 200):
         for y in range(-300, 350, 200):
+            lock.acquire()
             draw_rectangle(tur, x-10, y+5, 20, 15)
+            lock.release()
+            time.sleep(.000001)
+            
+
 
 
 def run_no_threads(tur, log, main_turtle):
@@ -171,6 +185,22 @@ def run_with_threads(tur, log, main_turtle):
     # TODO - Start add your code here.
     # You need to use 4 threads where each thread concurrently drawing one type of shape.
     # You are free to change any functions in this code except main()
+
+    the_holy_golden_desired_lock = threading.Lock()
+    t1 = threading.Thread(target=draw_circles, args=(tur, the_holy_golden_desired_lock))
+    t2 = threading.Thread(target=draw_squares, args=(tur, the_holy_golden_desired_lock))
+    t3 = threading.Thread(target=draw_rectangles, args=(tur, the_holy_golden_desired_lock))
+    t4 = threading.Thread(target=draw_triangles, args=(tur, the_holy_golden_desired_lock))
+
+    thread_list = [t1, t2, t3, t4]
+
+    for t in thread_list:
+        t.start()
+        
+
+    for t in thread_list:
+        t.join()
+
 
     log.step_timer('All drawing commands have been created')
 
