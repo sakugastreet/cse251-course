@@ -54,18 +54,81 @@ call_count = 0
 
 
 # TODO Add your threaded class definition here
+class Request_thread(threading.Thread):
 
+    def __init__(self, url):
+        threading.Thread.__init__(self)
+        inc_call_count()
+        self.url = url
+        self.data = {}
+
+    def run(self):
+        response = requests.get(self.url)
+        
+        if response.status_code == 200:
+            self.data = response.json
+        else:
+            self.data = {'RESPONSE = ', response.status_code}
 
 # TODO Add any functions you need here
-
+def inc_call_count():
+    global call_count
+    call_count += 1
 
 def main():
     log = Log(show_terminal=True)
     log.start_timer('Starting to retrieve data from the server')
+    log.write("-----------------------------------------")
 
     # TODO Retrieve Top API urls
+    t1 = Request_thread(fr"{TOP_API_URL}")
+    t1.start()
+    t1.join()
+
+    thread_list = []
 
     # TODO Retireve Details on film 6
+    t2 = Request_thread(fr"{t1.data()["films"]}6")
+    t2.start()
+    t2.join()
+
+    log.write(f"Title   : {t2.data()['title']}")
+    log.write(f"Director: {t2.data()['director']}")
+    log.write(f"Producer: {t2.data()['producer']}")
+    log.write(f"Released: {t2.data()['release_date']}")
+    log.write_blank_line()
+
+
+    for item in t2.data():
+        if type(t2.data()[item]) == list:
+            # creating a list to hold all the things in that category
+            category = []
+            names = []
+            for url in t2.data()[item]:
+                cat_name = item.capitalize()
+                new_thread = Request_thread(url)
+                category.append(new_thread)
+                new_thread.start()
+
+            for thread in category:
+                thread.join()
+                names.append(thread.data()["name"])
+
+            names.sort()
+            log.write(f"{cat_name}: {category.__len__()}")
+            final_string = ""
+            for name in names:
+                final_string += name + ", "
+            
+            log.write(final_string)
+            log.write_blank_line()
+
+
+
+    
+
+        
+
 
     # TODO Display results
 
