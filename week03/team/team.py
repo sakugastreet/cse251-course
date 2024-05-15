@@ -46,6 +46,33 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+
+class Request_thread(threading.Thread):
+
+    def __init__(self, url):
+        threading.Thread.__init__(self)
+        inc_call_count()
+        self.url = url
+        self.data = {}
+
+    def run(self):
+        response = requests.get(self.url)
+        
+        if response.status_code == 200:
+            self.data = response.json
+        else:
+            self.data = {'RESPONSE = ', response.status_code}
+
+# class hottub(mp.Pool()):
+#     def __init__(self, num_processes):
+#         super(num_processes)
+#         self.SIZE = 25
+#         self.highlighting = [[False for _ in range(self.SIZE)] for _ in range(self.SIZE)]
+
+#         def run_pool(self, func, iterable):
+#              = self.map(func, iterable)
+
+
 class Board():
 
     SIZE = 25

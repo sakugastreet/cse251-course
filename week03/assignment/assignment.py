@@ -1,4 +1,6 @@
 """
+
+This assignments meets the requirements for a catagory 4.
 ------------------------------------------------------------------------------
 Course: CSE 251
 Lesson Week: 03
@@ -17,6 +19,7 @@ Instructions:
 ------------------------------------------------------------------------------
 """
 
+
 from matplotlib.pylab import plt  # load plot library
 from PIL import Image
 import numpy as np
@@ -31,7 +34,7 @@ CPU_COUNT = mp.cpu_count() + 4
 
 # TODO Your final video need to have 300 processed frames.  However, while you are 
 # testing your code, set this much lower
-FRAME_COUNT = 20
+FRAME_COUNT = 300
 
 RED   = 0
 GREEN = 1
@@ -61,7 +64,14 @@ def create_new_frame(image_file, green_file, process_file):
 
 
 # TODO add any functions to need here
+def create_frame_num(image_num):
+    image_number = image_num
 
+    image_file = rf'elephant/image{image_number:03d}.png'
+    green_file = rf'green/image{image_number:03d}.png'
+    process_file = rf'processed/image{image_number:03d}.png'
+
+    create_new_frame(image_file, green_file, process_file)
 
 
 if __name__ == '__main__':
@@ -76,19 +86,24 @@ if __name__ == '__main__':
 
     # TODO Process all frames trying 1 cpu, then 2, then 3, ... to CPU_COUNT
     #      add results to xaxis_cpus and yaxis_times
-
-
+ 
+ 
     # sample code: remove before submitting  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # process one frame #10
-    image_number = 10
 
-    image_file = rf'elephant/image{image_number:03d}.png'
-    green_file = rf'green/image{image_number:03d}.png'
-    process_file = rf'processed/image{image_number:03d}.png'
+    # start the timer
 
-    start_time = timeit.default_timer()
-    create_new_frame(image_file, green_file, process_file)
-    print(f'\nTime To Process all images = {timeit.default_timer() - start_time}')
+
+    for count in range(1, CPU_COUNT):
+        start_time = timeit.default_timer()
+        xaxis_cpus.append(count)
+
+        with mp.Pool(count) as Jacuzzi9000:
+            Jacuzzi9000.map(create_frame_num, range(1, 301))
+        
+        yaxis_times.append(timeit.default_timer() - start_time)
+        print(f'\nTime To Process all images = {timeit.default_timer() - start_time}')
+        log.write(f'\nTime To Process all images = {timeit.default_timer() - start_time}')
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
