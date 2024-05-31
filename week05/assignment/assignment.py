@@ -2,7 +2,7 @@
 Course: CSE 251
 Lesson Week: 05
 File: assignment.py
-Author: <Your name>
+Author: <Joseph Earl>
 
 Purpose: Assignment 05 - Factories and Dealers
 
@@ -18,7 +18,7 @@ Instructions:
 - You are not allowed to use the normal Python Queue object.  You must use Queue251.
 - the shared queue between the threads that are used to hold the Car objects
   can not be greater than MAX_QUEUE_SIZE
-
+  
 """
 
 from datetime import datetime, timedelta
@@ -59,7 +59,7 @@ class Car():
         time.sleep(random.random() / (SLEEP_REDUCE_FACTOR))
 
         # Display the car that has was just created in the terminal
-        self.display()
+        # self.display()
            
     def display(self):
         print(f'{self.make} {self.model}, {self.year}')
@@ -87,29 +87,61 @@ class Queue251():
 class Factory(threading.Thread):
     """ This is a factory.  It will create cars and place them on the car queue """
 
-    def __init__(self):
+    def __init__(self, queue:Queue251, barrier:threading.Barrier, queue_slots:threading.Semaphore, cars_available:threading.Semaphore, factory_stats, i, dealer_count):
+        super().__init__()
         self.cars_to_produce = random.randint(200, 300)     # Don't change
+        self.queue = queue
+        self.queue_slots = queue_slots
+        self.cars_available = cars_available
+        self.barrier = barrier
+        self.index = i
+        self.factory_stats = factory_stats
+        self.dealer_count = dealer_count
 
 
     def run(self):
         # TODO produce the cars, the send them to the dealerships
-
+        print(f"Starting to run {self.index}")
+        for i in range(self.cars_to_produce):
+            car = Car()
+            self.queue_slots.acquire()
+            self.queue.put(car)
+            self.factory_stats[self.index] += 1
+            self.cars_available.release()
+        
         # TODO wait until all of the factories are finished producing cars
-
+        self.barrier.wait()
         # TODO "Wake up/signal" the dealerships one more time.  Select one factory to do this
-        pass
-
 
 
 class Dealer(threading.Thread):
     """ This is a dealer that receives cars """
 
-    def __init__(self):
-        pass
+    def __init__(self, queue:Queue251, barrier, queue_slots:threading.Semaphore, cars_available:threading.Semaphore, dealer_stats, i):
+        super().__init__()
+        self.queue = queue
+        self.queue_slots = queue_slots
+        self.cars_available = cars_available
+        self.barrier = barrier
+        self.dealer_stats = dealer_stats
+        self.index = i
+
 
     def run(self):
+        print(self.index)
         while True:
             # TODO handle a car
+            self.cars_available.acquire()
+            print(f"dealer{self.index}")
+            if self.queue.get_max_size() == 0:
+                print(f"broke the loop{self.index}")
+                break
+
+            self.queue.get()
+            self.queue_slots.release()
+            self.dealer_stats[self.index] += 1
+            
+            
 
             # Sleep a little - don't change.  This is the last line of the loop
             time.sleep(random.random() / (SLEEP_REDUCE_FACTOR + 0))
@@ -120,26 +152,41 @@ def run_production(factory_count, dealer_count):
     """ This function will do a production run with the number of
         factories and dealerships passed in as arguments.
     """
-
+    
     # TODO Create semaphore(s) if needed
+    cars_available = threading.Semaphore(0)
+    queue_slots = threading.Semaphore(MAX_QUEUE_SIZE)
     # TODO Create queue
+    car_queue = Queue251()
     # TODO Create lock(s) if needed
     # TODO Create barrier
-
+    barrier = threading.Barrier(factory_count, cars_available.release(dealer_count))
+    # , cars_available.release(dealer_count)
     # This is used to track the number of cars receives by each dealer
     dealer_stats = list([0] * dealer_count)
-
+    factory_stats = list([0] * factory_count)
     # TODO create your factories, each factory will create CARS_TO_CREATE_PER_FACTORY
-
+    factories = [Factory(car_queue, barrier, queue_slots, cars_available, factory_stats, i, dealer_count) for i in range(factory_count)]
     # TODO create your dealerships
-
+    dealers = [Dealer(car_queue, barrier, queue_slots, cars_available, dealer_stats, i) for i in range(dealer_count)]
     log.start_timer()
+    # print("function started")
 
-    # TODO Start all dealerships
 
     # TODO Start all factories
+    for factory in factories:
+        factory.start()
 
+    # TODO Start all dealerships
+    for dealer in dealers:
+        dealer.start()
+
+    
     # TODO Wait for factories and dealerships to complete
+    for factory in factories:
+        factory.join()    
+    for dealer in dealers:
+        dealer.join()
 
     run_time = log.stop_timer(f'{sum(dealer_stats)} cars have been created')
 
@@ -166,6 +213,8 @@ def main(log):
 
         # The number of cars produces needs to match the cars sold
         assert sum(dealer_stats) == sum(factory_stats)
+
+
 
 
 if __name__ == '__main__':

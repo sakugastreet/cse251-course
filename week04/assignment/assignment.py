@@ -97,6 +97,7 @@ class Factory(threading.Thread):
             self.empty_slots.acquire()
             self.queue.put(new_car)
             self.cars_available.release()
+            
 
         # signal the dealer that there there are not more cars
         self.cars_available.release()

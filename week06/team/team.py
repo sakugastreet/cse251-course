@@ -23,7 +23,7 @@ import filecmp
 # Include cse 251 common Python files
 from cse251 import *
 
-def sender():
+def sender(parent_conn, filename):
     """ function to send messages to other end of pipe """
     '''
     open the file
@@ -31,7 +31,8 @@ def sender():
     Note: you must break each line in the file into words and
           send those words through the pipe
     '''
-    pass
+    
+    
 
 
 def receiver():
@@ -41,6 +42,9 @@ def receiver():
     receive all content through the shared pipe and write to the file
     Keep track of the number of items sent over the pipe
     '''
+    word = conn.recv
+    if word == "|||||":
+        
     pass
 
 
@@ -51,22 +55,26 @@ def are_files_same(filename1, filename2):
 
 def copy_file(log, filename1, filename2):
     # TODO create a pipe 
-    
+    parent_conn, child_conn = mp.Pipe()
     # TODO create variable to count items sent over the pipe
-
+    items_sent = 0
     # TODO create processes 
+    p1 = mp.Process(target=sender, args=(parent_conn,)) 
+    p2 = mp.Process(target=receiver, args=(child_conn,))
 
     log.start_timer()
     start_time = log.get_time()
 
     # TODO start processes 
-    
+    p1.start()
+    p2.start()
     # TODO wait for processes to finish
-
+    p1.join()
+    p2.join()
     stop_time = log.get_time()
 
-    log.stop_timer(f'Total time to transfer content = {PUT YOUR VARIABLE HERE}: ')
-    log.write(f'items / second = {PUT YOUR VARIABLE HERE / (stop_time - start_time)}')
+    log.stop_timer(f'Total time to transfer content = {stop_time}: ')
+    log.write(f'items / second = {items_sent/ (stop_time - start_time)}')
 
     if are_files_same(filename1, filename2):
         log.write(f'{filename1} - Files are the same')
