@@ -2,7 +2,7 @@
 Course: CSE 251
 Lesson Week: 07
 File: assingnment.py
-Author: <Your name here>
+Author: <Joseph Earl>
 Purpose: Process Task Files
 
 Instructions:  See I-Learn
@@ -12,6 +12,7 @@ TODO
 Add your comments here on the pool sizes that you used for your assignment and
 why they were the best choices.
 
+I chose to use pool sizes of 6, as that was what gave me the fastest time. This submission meets all the requirements for a category 4.
 
 """
 
@@ -39,6 +40,9 @@ result_upper = []
 result_sums = []
 result_names = []
 
+def log_results(results, result_list):
+        result_list.append(results)
+
 def is_prime(n: int):
     """Primality test using 6k+-1 optimization.
     From: https://en.wikipedia.org/wiki/Primality_test
@@ -62,7 +66,12 @@ def task_prime(value):
             - or -
         {value} is not prime
     """
-    pass
+    if is_prime(value):
+        return f"{value} is prime"
+    else:
+        return f"{value} is not prime"
+
+
 
 def task_word(word):
     """
@@ -72,21 +81,29 @@ def task_word(word):
             - or -
         {word} not found *****
     """
-    pass
+    with open("words.txt", "r") as file:
+        for line in file:
+            if word == line.strip():
+                return f"{word} Found"
+            
+        return f"{word} not found"
 
 def task_upper(text):
     """
     Add the following to the global list:
         {text} ==>  uppercase version of {text}
     """
-    pass
+    return text.upper()
 
 def task_sum(start_value, end_value):
     """
     Add the following to the global list:
         sum of {start_value:,} to {end_value:,} = {total:,}
     """
-    pass
+    
+    total = sum(range(start_value, end_value + 1))
+    response = f"sum of {start_value} to {end_value} = {total}"
+    return response
 
 def task_name(url):
     """
@@ -96,7 +113,13 @@ def task_name(url):
             - or -
         {url} had an error receiving the information
     """
-    pass
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        name = response.json().get('name', 'Unknown')
+        return f"{url} has name {name}"
+    except requests.RequestException:
+        return f"{url} had an error receiving the information"
 
 
 def main():
@@ -104,31 +127,40 @@ def main():
     log.start_timer()
 
     # TODO Create process pools
-
+    pools = [mp.Pool(6) for _ in range(5)]
     # TODO you can change the following
     # TODO start and wait pools
+
     
     count = 0
     task_files = glob.glob("*.task")
     for filename in task_files:
-        # print()
-        # print(filename)
+        print()
+        print(filename)
         task = load_json_file(filename)
         print(task)
         count += 1
         task_type = task['task']
         if task_type == TYPE_PRIME:
-            task_prime(task['value'])
+            r1 = pools[0].apply_async(task_prime, (task['value'], ), callback= lambda res: log_results(res, result_primes))
         elif task_type == TYPE_WORD:
-            task_word(task['word'])
+            r2 = pools[1].apply_async(task_word, (task['word'], ), callback= lambda res: log_results(res, result_words))
         elif task_type == TYPE_UPPER:
-            task_upper(task['text'])
+            r3 = pools[2].apply_async(task_upper, (task['text'], ), callback= lambda res: log_results(res, result_upper))
         elif task_type == TYPE_SUM:
-            task_sum(task['start'], task['end'])
+            r4 = pools[3].apply_async(task_sum, (task['start'], task["end"]), callback= lambda res: log_results(res, result_sums))
         elif task_type == TYPE_NAME:
-            task_name(task['url'])
+            r5 = pools[4].apply_async(task_name, (task['url'], ), callback= lambda res: log_results(res, result_names))
+
         else:
             log.write(f'Error: unknown task type {task_type}')
+
+
+    for pool in pools:
+        pool.close()
+
+    for pool in pools:
+        pool.join()
 
 
 
