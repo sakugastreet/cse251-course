@@ -2,7 +2,7 @@
 Course: CSE 251 
 Lesson Week: 09
 File: assignment09-p1.py 
-Author: <Add name here>
+Author: <Joseph Earl>
 
 Purpose: Part 1 of assignment 09, finding a path to the end position in a maze
 
@@ -27,14 +27,30 @@ FAST_SPEED = 1
 speed = SLOW_SPEED
 
 # TODO add any functions
-
-def solve_path(maze):
+# he had this function named solve maze
+def solve_path(maze:Maze, path:list=[], row=0, col=1):
     """ Solve the maze and return the path found between the start and end positions.  
         The path is a list of positions, (x, y) """
-        
-    # TODO start add code here
-    path = []
-    return path
+    maze.move(row, col, COLOR)
+    path.append((row, col))
+
+    if maze.at_end(row, col):
+        return True
+    
+    possible_moves = maze.get_possible_moves(row, col)
+    possible_moves.sort()
+    for move in possible_moves:
+            if solve_path(maze, path, move[0], move[1]):
+
+                return path
+
+                
+    
+    ## the restore function is what makes the grey
+    maze.restore(row, col)
+    path.remove((row, col))
+    # # TODO start add code here
+    # return path
 
 
 def get_path(log, filename):

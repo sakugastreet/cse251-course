@@ -73,14 +73,23 @@ def get_color():
     current_color_index += 1
     return color
 
-def solve_find_end(maze):
+def solve_find_end(maze:Maze, row=0, col=1, color=get_color()):
     """ finds the end position using threads.  Nothing is returned """
     # When one of the threads finds the end position, stop all of them
     global stop
     stop = False
 
+    maze.move(row, col, color)
 
-    pass
+    available_positions = maze.get_possible_moves(row, col)
+    if not available_positions:
+        return
+    solve_find_end(maze, available_positions[0][0], available_positions[0][1], color)
+    for move in available_positions[1:]:
+        thread = threading.Thread(target=solve_find_end, args=(maze, move[0], move[1], get_color()))
+        thread.start()
+        thread.join()
+
 
 
 def find_end(log, filename, delay):
